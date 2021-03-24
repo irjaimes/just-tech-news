@@ -13,6 +13,6 @@ app.use(routes);
 
 // turn on connection to db and server
 // sync method means sequelize is taking models and connecting them toe associated db tables. if a table is not found it will create one.
-sequelize.sync({ force: false }).then(() => { // force: true would cause for db tables to be dropped and recreated
+sequelize.sync({ force: false }).then(() => { // force: true causes for db tables to be dropped and recreated if there are any association.
   app.listen(PORT, () => console.log('Now listening'));
 });
