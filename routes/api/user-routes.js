@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { User } = require('../../models');
+const { User} = require('../../models');
 const { restore } = require('../../models/user');
 
 // GET /api/users (will select all users from table in db and send back as json)
