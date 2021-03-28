@@ -1,6 +1,5 @@
 const router = require('express').Router();
-const { User} = require('../../models');
-const { restore } = require('../../models/user');
+const { User, Post, Vote, Comment } = require('../../models');
 
 // GET /api/users (will select all users from table in db and send back as json)
 router.get('/', (req, res) => {
@@ -21,7 +20,28 @@ router.get('/:id', (req, res) => {
         attributes: { exclude: ['password'] },
         where: {
             id: req.params.id
-        }
+        },
+        include: [
+            {
+                model: Post,
+                attributes: ['id', 'title', 'post_url', 'created_at']
+            },
+            // include the Comment model here:
+            {
+                model: Comment,
+                attributes: ['id', 'comment_text', 'created_at'],
+                include: {
+                    model: Post,
+                    attributes: ['title']
+                }
+            },
+            {
+                model: Post,
+                attributes: ['title'],
+                through: Vote,
+                as: 'voted_posts'
+            }
+        ]
     })
         .then(dbUserData => {
             if (!dbUserData) {
@@ -68,7 +88,7 @@ router.post('/login', (req, res) => {
         const validPassword = dbUserData.checkPassword(req.body.password);
 
         if (!validPassword) {
-            res.status(400).json({ message: 'Incorrect password!'});
+            res.status(400).json({ message: 'Incorrect password!' });
             return;
         }
         res.json({ user: dbUserData, message: 'You are now logged in!' });

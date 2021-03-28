@@ -1,6 +1,5 @@
 const router = require('express').Router();
-const { Post, User, Vote } = require('../../models');
-
+const { Post, User, Vote, Comment } = require('../../models');
 const sequelize = require('../../config/connection');
 
 // get all users
@@ -17,6 +16,15 @@ router.get('/', (req, res) => {
         ],
         order: [['created_at', 'DESC']], // shows most recent post first based on time stamp
         include: [
+            // include the Comment model here:
+            {
+                model: Comment,
+                attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+                include: {
+                    model: User,
+                    attributes: ['username']
+                }
+            },
             {
                 model: User,
                 attributes: ['username']
@@ -28,7 +36,6 @@ router.get('/', (req, res) => {
             console.log(err);
             res.status(500).json(err);
         });
-
 });
 
 router.get('/:id', (req, res) => {
@@ -45,14 +52,16 @@ router.get('/:id', (req, res) => {
         ],
         include: [
             {
-                model: Post,
-                attributes: ['id', 'title', 'post_url', 'created_at']
+                model: Comment,
+                attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+                include: {
+                    model: User,
+                    attributes: ['username']
+                }
             },
             {
-                model: Post,
-                attributes: ['title'],
-                through: Vote,
-                as: 'voted_posts'
+                model: User,
+                attributes: ['username'],
             }
         ]
     })
@@ -86,11 +95,11 @@ router.post('/', (req, res) => {
 // PUT /api/posts/upvote (technically voting up a post is updating a post therefore we're using the post routes)
 router.put('/upvote', (req, res) => {
     // custom static method created in models/Post.js
-    Post.upvote(req.body, { Vote })
+    Post.upvote(req.body, { Vote, Comment, User })
         .then(updatedPostData => res.json(updatedPostData))
         .catch(err => {
             console.log(err);
-            res.status(400).json(err);
+            res.status(500).json(err);
         });
 });
 
@@ -117,7 +126,6 @@ router.put('/:id', (req, res) => {
             res.status(500).json(err);
         });
 });
-
 
 
 router.delete('/:id', (req, res) => {
